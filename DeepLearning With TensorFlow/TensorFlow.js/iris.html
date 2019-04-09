@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Iris Dataset Classification</title>
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.2"></script>
+	<script src="iris_data.js"></script>
+</head>
+<body>
+</body>
+<script >
+	
+	async function trainModel(xTrain, yTrain, xTest, yTest){
+		const model = tf.sequential();
+		const learningRate = .01;
+		const numberofEpochs = 40;
+		const optimizer = tf.train.adam(learningRate);
+
+		model.add(tf.layers.dense(
+		{
+			units:10, activation: 'sigmoid', inputShape: [xTrain.shape[1]]
+		}));
+
+		model.add(tf.layers.dense(
+		{
+			units: 3, activation: 'softmax'
+		}));
+
+		model.compile(
+		{
+			optimizer: optimizer, loss: 'categoricalCrossentropy', metrics: ['accuracy']
+		});
+
+		const history = await model.fit(xTrain, yTrain, 
+		{
+			epochs: numberofEpochs, validationData: [xTest, yTest], callbacks: {
+				onEpochEnd: async (epoch, logs) => {
+					console.log('Epoch: ' + epoch + 'logs: ' + logs.loss);
+					await tf.nextFrame();
+				},
+			}
+		});
+
+		return model
+
+	}
+
+	async function doIris() {
+		const [xTrain, yTrain, xTest, yTest] = getIrisData(.2);
+		model = await trainModel(xTrain, yTrain, xTest, yTest);
+
+		const input = tf.tensor2d([5.8, 2.7, 5.1, 1.9], [1,4]);
+		const prediction = model.predict(input);
+		alert(prediction);
+		
+	}
+
+
+</script>
+</html>
